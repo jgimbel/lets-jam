@@ -5,7 +5,7 @@ import * as actions from '../../actions'
 
 export class AddSong extends Component {
     render(){
-        var { addSong } = this.props.actions
+        const { addSong } = bindActionCreators(actions, this.props.send)
         return (
             <section>
                 <input type="text" ref="url"/>
@@ -14,4 +14,4 @@ export class AddSong extends Component {
         )
     }
 }
-export default connect(() => ({}), dispatch => ({actions: bindActionCreators(actions, dispatch)}))(AddSong)
+export default connect(() => ({}))(AddSong)

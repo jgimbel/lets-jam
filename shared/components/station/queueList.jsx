@@ -5,8 +5,9 @@ import * as actions from '../../actions'
 import Song from './song'
 export class Queue extends Component {
     render(){
+        
+        const { nextSong } = bindActionCreators(actions, this.props.send)
         const { played, playing, queue } = this.props.songs
-        const { nextSong } = this.props.actions
         console.log(this.props.songs)
         return (
             <div className="songs">
@@ -25,6 +26,5 @@ export class Queue extends Component {
 }
 
 export default connect(
-    state => ({songs: state.songs}),
-    dispatch => ({actions: bindActionCreators(actions, dispatch)})
+    state => ({songs: state.songs})
 )(Queue)

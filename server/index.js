@@ -1,33 +1,37 @@
-let express = require('express')
-  , url = require('url')
+'use strict';
+require('babel-register')({extensions: ['.js', '.jsx']})
+
+let url = require('url')
   , path = require('path')
+  
+  ,  express = require('express')
   , app = express()
   , server = require('http').createServer(app)
   , WebSocketServer = require('ws').Server
   , wss = new WebSocketServer({ server: server })
+  
   , engine = require('react-view-engine')
+  
   , ytdl = require('ytdl-core')
-  , emptyQueue = { queue: [], playing: null, played: [] }
+  
+  , emptyQueue = { songs: { queue: [], playing: null, played: [] } }
   , redux = require('redux')
   , applyMiddleware = redux.applyMiddleware
   , createStore = redux.createStore
   , thunk = require('redux-thunk')
-  , reducer = require('../shared/reducers')
+  , reducer = require('../shared/reducers').default
 
 
-require('babel-register')({extensions: ['.js', '.jsx']})
 engine.setLayout('layout')
 
 // Normal express view stuff
 app.engine('jsx', engine.engine)
 app.set('view', engine.view)
 app.set("view engine", "jsx")
-app.set("views", __dirname+"/../shared/components")
+app.set("views", __dirname + "/../shared/components")
 app.set("views cache", false)
 
-
 let locations = []
-
 
 app.use(express.static(path.join(__dirname, '..', '.build')))
 
@@ -41,7 +45,7 @@ app.get('/station/:station', (req, res) => {
       }
   }
   
-    res.render('station', store || emptyQueue)
+    res.render('station', store || {})
 })
 
 app.get('/song', (req, res) => {
@@ -67,30 +71,39 @@ app.get('/song', (req, res) => {
     })
 })
 
-
 wss.on('connection', function connection(ws) {
+  //what redux store currently exists on this
   var location = url.parse(ws.upgradeReq.url, true)
   let store
+  
   for(let loc of locations){
       if(loc.path == location.path){
           store = loc.store
       }
   }
+  
   if(!store){
-      store = { store: applyMiddleware(thunk)(createStore)(reducer,  emptyQueue) }
+      store = applyMiddleware(thunk)(createStore)(reducer)
       locations.push(Object.assign({}, location, { store }))
   }
-  
-  // you might use location.query.access_token to authenticate or share sessions
-  // or ws.upgradeReq.headers.cookie (see http://stackoverflow.com/a/16395220/151312)
 
   ws.on('message', function incoming(message) {
-    store.dispatch(message)
+    let action = JSON.parse(message)
+    store.dispatch(action)
+    wss.broadcast(message, location.path)
     console.log('received: %s', message);
   });
-
-  ws.send('something');
+  
 });
+
+wss.broadcast = function broadcast(data, loc) {
+  wss.clients.forEach(function each(client) {
+    if(url.parse(client.upgradeReq.url, true).path == loc){
+        client.send(data);   
+    }
+  });
+};
+
 
 server.listen(process.env.PORT || 8000, process.env.IP || '127.0.0.1')
 server.on('listening', () => console.log('listening'))
