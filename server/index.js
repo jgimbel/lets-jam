@@ -16,9 +16,11 @@ app.set("views cache", false)
 app.use(express.static(path.join(__dirname, '..', '.build')))
 
 app.get('/', (req, res) => res.render('home'))
+
 app.get('/station/:station', (req, res) => {
     res.render('station', {queue: [], playing: null, played: []})
 })
+
 app.get('/song', (req, res) => {
     const song = req.query.song
     ytdl.getInfo(song, (err, info) => {
@@ -43,5 +45,5 @@ app.get('/song', (req, res) => {
 })
 
 var server = require('http').createServer(app)
-server.listen(8000)
+server.listen(process.env.PORT || 8000, process.env.IP || '127.0.0.1')
 server.on('listening', () => console.log('listening'))

@@ -8,7 +8,7 @@ export default class Layout extends Component {
         return (
             <html>
                 <head>
-                <title>Radio Room</title>
+                <title>Let's Jam!</title>
                 </head>
                 <body>
                     <Provider store={applyMiddleware(thunk)(createStore)(reducer, this.props.initialState)}>
