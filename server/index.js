@@ -24,16 +24,17 @@ let url = require('url')
 
 engine.setLayout('layout')
 
-let locations = []
+let locations = {}
 function findStore(path){
-    for(let loc of locations){
-        if(loc.path == path){
-            return loc.store.getState()
-        }
+    console.log(path)
+    if(locations[path]){ 
+        return locations[path].store
+    } else {
+        let store = applyMiddleware(thunk)(createStore)(reducer, emptyQueue)
+        locations[path] = Object.assign({}, path, { store })
+        return store    
     }
-    let store = applyMiddleware(thunk)(createStore)(reducer)
-    locations.push(Object.assign({}, path, { store }))
-    return store
+    
 }
 
 // Normal express view stuff
@@ -50,13 +51,14 @@ app.get('/', (req, res) => res.render('home'))
 
 app.get('/station/:station', (req, res) => {
 
-    let store = findStore(req.path)
+    let store = findStore(req.path).getState()
     res.render('station', { store } || {})
 })
 
 app.get('/song/:station', (req, res) => {
     const song = req.query.song
-    const store = findStore(`/station/${req.params.station}`)
+    let loc = `/station/${req.params.station}`
+    const store = findStore(loc)
     ytdl.getInfo(song, (err, info) => {
         if(err || !(info && info.formats && info.formats[0].url && info.title)) {
             return res.json({
@@ -78,6 +80,10 @@ app.get('/song/:station', (req, res) => {
             },
             time
         })
+        let nextSongTime = setTimeout(() => { 
+            store.dispatch({type:"NEXT_SONG"}); 
+            wss.broadcast({ type:"NEXT_SONG" }, loc) 
+        }, (time - Date.now()))
     })
 })
 
@@ -89,16 +95,18 @@ wss.on('connection', function connection(ws) {
   ws.on('message', function incoming(message) {
     let action = JSON.parse(message)
     store.dispatch(action)
-    wss.broadcast(message, location.path)
-    //console.log('received: %s', message)
+    wss.broadcast(action, location.path)
+    console.log('received: %s', message)
   })
   
 })
 
 wss.broadcast = function broadcast(data, loc) {
+  let json = JSON.stringify(data)
+  console.log("sending: " + json)
   wss.clients.forEach(function each(client) {
     if(url.parse(client.upgradeReq.url, true).path == loc){
-        client.send(data)
+        client.send(json)
     }
   })
 }

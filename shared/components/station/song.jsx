@@ -2,23 +2,21 @@ import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
 export default class AudioItem extends Component {
     componentDidMount(){
-        const { source, length, time, onProgress, onTimeUpdate, onEnd } = this.props
+        const { source, length, time, onProgress, onTimeUpdate } = this.props
         const audio = this.refs.audio
         if(source){
             this.updateSource()
         }
-        audio.currentTime = time || 0
-        audio.addEventListener('progress', (ev) => { console.log(ev) })
-        audio.addEventListener('timeupdate', (ev) => { console.log(ev) })
-        audio.addEventListener('ended', onEnd)
+        audio.currentTime = (Date.now() - time)/1000 || 0
+        //audio.addEventListener('progress', (ev) => { console.log(ev) })
+        //audio.addEventListener('timeupdate', (ev) => { console.log(ev) })
     }
     
     componentWillUnmount() {
         const { source, length, time, onProgress, onTimeUpdate, onEnd } = this.props
         const audio = this.refs.audio
-        audio.removeEventListener('progress', onProgress)
-        audio.removeEventListener('timeupdate', onTimeUpdate)
-        audio.removeEventListener('ended', onEnd)
+        //audio.removeEventListener('progress', onProgress)
+        //audio.removeEventListener('timeupdate', onTimeUpdate)
     } 
     
     componentDidUpdate(prevProps) {

@@ -15,7 +15,7 @@ export class Queue extends Component {
                    { played.map( (song, index) => (<Song {...song} key={index} />)) }
                 </ul>
                 <div className="playing">
-                    { playing ? <Song mutable={true} {...playing} isPlaying={true} onEnd={() => nextSong()} /> : null }
+                    { playing ? <Song mutable={true} {...playing} isPlaying={true} /> : null }
                 </div>
                 <ul className="queue">
                     { queue.map( (song, index) => <Song {...song} key={index} />) }
