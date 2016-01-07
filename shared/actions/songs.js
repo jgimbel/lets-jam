@@ -1,4 +1,4 @@
-
+import 'isomorphic-fetch'
 export function nextSong(){
     return {
         type: "NEXT_SONG"
@@ -6,9 +6,9 @@ export function nextSong(){
 }
 
 export function addSong(song){
-    var Fetch = require('whatwg-fetch')
     return (dispatch, getState) =>{
-        fetch('/song?song='+song)
+        let url = (window.location.hostname || 'localhost:8000') + '/song?song='+song
+        fetch(url)
         .then(res => res.json())
           .then((res) => {
             dispatch(res)
