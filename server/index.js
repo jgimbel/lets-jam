@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 require('babel-register')({extensions: ['.js', '.jsx']})
 
 let url = require('url')
@@ -40,12 +40,12 @@ app.get('/', (req, res) => res.render('home'))
 app.get('/station/:station', (req, res) => {
   let store
   for(let loc of locations){
-      if(loc.url == req.path){
-          store = loc.store
+      if(loc.path == req.path){
+          store = loc.store.getState()
       }
   }
   
-    res.render('station', store || {})
+    res.render('station', { store } || {})
 })
 
 app.get('/song', (req, res) => {
@@ -91,18 +91,18 @@ wss.on('connection', function connection(ws) {
     let action = JSON.parse(message)
     store.dispatch(action)
     wss.broadcast(message, location.path)
-    console.log('received: %s', message);
-  });
+    console.log('received: %s', message)
+  })
   
-});
+})
 
 wss.broadcast = function broadcast(data, loc) {
   wss.clients.forEach(function each(client) {
     if(url.parse(client.upgradeReq.url, true).path == loc){
-        client.send(data);   
+        client.send(data)
     }
-  });
-};
+  })
+}
 
 
 server.listen(process.env.PORT || 8000, process.env.IP || '127.0.0.1')

@@ -7,7 +7,7 @@ export function nextSong(){
 
 export function addSong(song){
     return (dispatch, getState) =>{
-        let url = (window.location.hostname || 'localhost:8000') + '/song?song='+song
+        let url = `http://${(window.location.host || 'localhost:8000')}/song?song=${song}`
         fetch(url)
         .then(res => res.json())
           .then((res) => {

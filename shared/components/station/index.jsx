@@ -19,11 +19,15 @@ export default class Station extends Component {
     }
     
     dispatch(action){
-        this.ws.send(JSON.stringify(action))
+        if(typeof action == 'function'){
+            action((a)=>this.dispatch(a), this.store.getState)
+        } else {
+            this.ws.send(JSON.stringify(action))
+        }
     }
     
     render(){
-       this.store = this.store || applyMiddleware(thunk)(createStore)(reducer, this.props.initialState)
+       this.store = this.store || applyMiddleware(thunk)(createStore)(reducer, this.props.store)
        return (
             <Provider store={this.store}>
                 <main>
