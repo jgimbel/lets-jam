@@ -12,13 +12,13 @@ export class Queue extends Component {
         return (
             <div className="songs">
                 <ul className="played">
-                   { played.map( song => (<Song {...song} />)) }
+                   { played.map( (song, index) => (<Song {...song} key={index} />)) }
                 </ul>
                 <div className="playing">
-                    { playing ? <Song {...playing} isPlaying={true} onEnd={() => nextSong()} /> : null }
+                    { playing ? <Song mutable={true} {...playing} isPlaying={true} onEnd={() => nextSong()} /> : null }
                 </div>
                 <ul className="queue">
-                    { queue.map( song => <Song {...song} />) }
+                    { queue.map( (song, index) => <Song {...song} key={index} />) }
                 </ul>
             </div>
         )

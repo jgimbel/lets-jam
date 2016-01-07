@@ -8,8 +8,8 @@ export default class AudioItem extends Component {
             this.updateSource()
         }
         audio.currentTime = time || 0
-        audio.addEventListener('progress', onProgress)
-        //audio.addEventListener('timeupdate', onTimeUpdate)
+        audio.addEventListener('progress', (ev) => { console.log(ev) })
+        audio.addEventListener('timeupdate', (ev) => { console.log(ev) })
         audio.addEventListener('ended', onEnd)
     }
     
@@ -17,7 +17,7 @@ export default class AudioItem extends Component {
         const { source, length, time, onProgress, onTimeUpdate, onEnd } = this.props
         const audio = this.refs.audio
         audio.removeEventListener('progress', onProgress)
-        //audio.removeEventListener('timeupdate', onTimeUpdate)
+        audio.removeEventListener('timeupdate', onTimeUpdate)
         audio.removeEventListener('ended', onEnd)
     } 
     
@@ -73,23 +73,31 @@ export default class AudioItem extends Component {
         node.muted = !node.muted
     }
     
+    mutable(mute){
+        if(mute){
+            return (
+                <button onClick={()=>this.onMute()}>
+                    Mute
+                </button>
+            )
+        }
+    }
+    
     render(){
-        const { source, duration, time, title, image } = this.props
+        const { source, duration, time, title, image, mutable } = this.props
         
         return (
-            <section>
-                <div style={{height: '90px', width: '120px', backgroundImage: `url(${image})`, backgroundRepeat: 'no-repeat'}}>
-                    <label>{title}</label>
+            <li>
+                <div style={{backgroundSize: '100%', height: '200px', width: '340px', backgroundImage: `url(${image})`, backgroundRepeat: 'no-repeat'}}>
+                    <div>{title}</div>
                 </div>
                 <audio ref="audio">
                     <source src={source} />
                 </audio>
                 <div className="controls">
-                    <button onClick={()=>this.onMute()}>
-                        Mute
-                    </button>
+                    {this.mutable(mutable)}
                 </div>
-            </section>
+            </li>
         )
     }
 }

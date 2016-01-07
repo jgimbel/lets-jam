@@ -14,7 +14,7 @@ let url = require('url')
   
   , ytdl = require('ytdl-core')
   
-  , emptyQueue = { songs: { queue: [], playing: null, played: [] } }
+  , emptyQueue = { songs: { queue: [], playing: null, played: [], time: 0 } }
   , redux = require('redux')
   , applyMiddleware = redux.applyMiddleware
   , createStore = redux.createStore
@@ -24,6 +24,18 @@ let url = require('url')
 
 engine.setLayout('layout')
 
+let locations = []
+function findStore(path){
+    for(let loc of locations){
+        if(loc.path == path){
+            return loc.store.getState()
+        }
+    }
+    let store = applyMiddleware(thunk)(createStore)(reducer)
+    locations.push(Object.assign({}, path, { store }))
+    return store
+}
+
 // Normal express view stuff
 app.engine('jsx', engine.engine)
 app.set('view', engine.view)
@@ -31,25 +43,20 @@ app.set("view engine", "jsx")
 app.set("views", __dirname + "/../shared/components")
 app.set("views cache", false)
 
-let locations = []
 
 app.use(express.static(path.join(__dirname, '..', '.build')))
 
 app.get('/', (req, res) => res.render('home'))
 
 app.get('/station/:station', (req, res) => {
-  let store
-  for(let loc of locations){
-      if(loc.path == req.path){
-          store = loc.store.getState()
-      }
-  }
-  
+
+    let store = findStore(req.path)
     res.render('station', { store } || {})
 })
 
-app.get('/song', (req, res) => {
+app.get('/song/:station', (req, res) => {
     const song = req.query.song
+    const store = findStore(`/station/${req.params.station}`)
     ytdl.getInfo(song, (err, info) => {
         if(err || !(info && info.formats && info.formats[0].url && info.title)) {
             return res.json({
@@ -57,16 +64,19 @@ app.get('/song', (req, res) => {
                 source: song
             })
         }
+        const oldTime = store.getState().songs.time != 0 ? store.getState().songs.time : Date.now()
+        let time = oldTime + info.length_seconds*1000
         res.json({
             type: "ADD_SONG",
             song: {
                 source: info.formats[0].url,
                 title: info.title,
-                time: 0,
+                time: oldTime,
                 duration: info.length_seconds,
-                image: info.thumbnail_url,
+                image: info.iurlmaxres || info.iurlhq || info.iurl,
                 votes: 0
-            }
+            },
+            time
         })
     })
 })
@@ -74,24 +84,13 @@ app.get('/song', (req, res) => {
 wss.on('connection', function connection(ws) {
   //what redux store currently exists on this
   var location = url.parse(ws.upgradeReq.url, true)
-  let store
-  
-  for(let loc of locations){
-      if(loc.path == location.path){
-          store = loc.store
-      }
-  }
-  
-  if(!store){
-      store = applyMiddleware(thunk)(createStore)(reducer)
-      locations.push(Object.assign({}, location, { store }))
-  }
+  let store = findStore(location.path)
 
   ws.on('message', function incoming(message) {
     let action = JSON.parse(message)
     store.dispatch(action)
     wss.broadcast(message, location.path)
-    console.log('received: %s', message)
+    //console.log('received: %s', message)
   })
   
 })
