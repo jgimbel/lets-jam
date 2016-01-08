@@ -11,8 +11,9 @@ import Queue from './queueList'
 export default class Station extends Component {
     
     componentDidMount(){
-        let host = window.document.location.host.replace(/:.*/, '');
-        this.ws = new WebSocket('ws://' + host + ':8000' + window.document.location.pathname);
+        let host = window.document.location.host
+        const protocol = window.location.protocol == 'http:' ? 'ws://' : 'wss://'
+        this.ws = new WebSocket(protocol + host + window.document.location.pathname);
         this.ws.onmessage = (event) => {
             this.store.dispatch(JSON.parse(event.data))
         };

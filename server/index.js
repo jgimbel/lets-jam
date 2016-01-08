@@ -57,6 +57,7 @@ app.get('/station/:station', (req, res) => {
 
 app.get('/song/:station', (req, res) => {
     const song = req.query.song
+    console.log(song)
     let loc = `/station/${req.params.station}`
     const store = findStore(loc)
     ytdl.getInfo(song, (err, info) => {
